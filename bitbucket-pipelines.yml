@@ -1,0 +1,33 @@
+# This is a sample build configuration for PHP..
+# Only use spaces to indent your .yml configuration.
+# ------
+# You can specify a custom docker image from Dockerhub as your build environment
+image:
+  name: composer
+
+pipelines:
+  branches:
+    test:
+      - step:
+          name: deployment to test
+          deployment: test
+          script:
+            #- composer -V
+            #- composer install
+            #- npm install
+            - pipe: atlassian/sftp-deploy:0.5.2
+              variables:
+                USER: 'yak'
+                SERVER: '206.189.197.79'
+                REMOTE_PATH: '/home/yak/www/test.resumeyak.com/builder/'
+                LOCAL_PATH: './'
+                SSH_KEY: $MY_SSH_KEY
+                DEBUG: 'true'
+                EXTRA_ARGS: '-o ServerAliveInterval=10'
+            - cat ./deploy.sh | ssh -i ~/.ssh/my_ssh_key yak@206.189.197.79
+    release:
+      - step:
+          caches:
+            - node
+          script:
+            - git ftp push --user $FTP_USERNAME_LIVE --passwd $FTP_PASSWORD_LIVE -v $FTP_LIVE
